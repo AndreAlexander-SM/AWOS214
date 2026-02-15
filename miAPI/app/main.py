@@ -67,7 +67,30 @@ async def crear_usuario(usuario:dict):
         "Usuario":usuario
     }
 
-@app.put("/v1/usuarios/",tags=['CRUD HTTP'], status_code=status.HTTP_204_NO_CONTENT)
-async def actualizar_usuario(usuario:dict):
-    for usr in usuarios:
-        if usr["id"] == usuario.get("id"):
+@app.put("/v1/usuarios/{id}", tags=['CRUD HTTP'])
+async def actualizar_usuario(id: int, usuario_actualizado: dict):
+    for index, usr in enumerate(usuarios):
+        if usr["id"] == id:
+            usuarios[index].update(usuario_actualizado)
+            return {
+                "mensaje": "Usuario actualizado correctamente",
+                "usuario": usuarios[index]
+            }
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"El usuario con ID {id} no existe."
+    )
+
+@app.delete("/v1/usuarios/{id}", tags=['CRUD HTTP'])
+async def eliminar_usuario(id: int):
+    for usuario in usuarios:
+        if usuario["id"] == id:
+            usuarios.remove(usuario)
+            return {
+                "mensaje": f"Usuario con ID {id} eliminado exitosamente",
+                "usuarios_restantes": len(usuarios)
+            }
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND, 
+        detail=f"No se pudo eliminar: El usuario con ID {id} no existe"
+    )
