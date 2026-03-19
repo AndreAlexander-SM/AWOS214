@@ -1,9 +1,11 @@
 #Endpoints
-from typing import Optional
-from app.data.database import usuarios
 import asyncio
-from fastapi import APIRouter
-
+from typing import Optional
+from fastapi.security import OAuth2PasswordRequestForm
+from app.security.authJWT import autenticar_usuario, crear_token_acceso, ACCESS_TOKEN_EXPIRE_MINUTES
+from datetime import timedelta
+from fastapi import status, HTTPException, Depends, APIRouter
+from app.data.database import usuarios
 router = APIRouter(tags=['Varios'])
 
 @router.get("/")
@@ -31,3 +33,18 @@ async def consultaTodos(id:Optional[int] = None):
         return{"mensaje":"usuario no encontrado", "usuario": id}
     else:
         return{"mensaje":"No se proporciono id" }
+    
+@router.post("/v1/auth/login")
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    usuario = autenticar_usuario(form_data.username, form_data.password)
+    if not usuario:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Usuario o contraseña incorrectos",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    token = crear_token_acceso(
+        data={"sub": usuario["username"]},
+        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    return {"access_token": token, "token_type": "bearer"}

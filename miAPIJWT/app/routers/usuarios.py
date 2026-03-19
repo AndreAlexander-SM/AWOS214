@@ -4,7 +4,7 @@
 from fastapi import status, HTTPException, Depends, APIRouter
 from app.models.usuario import usuario_create
 from app.data.database import usuarios
-from app.security.auth import verificar_Peticion
+from app.security.authJWT import verificar_Peticion
 
 router = APIRouter(
     prefix= "/v1/usuarios", tags= ["CRUD HTTP"]
@@ -33,12 +33,13 @@ async def crear_usuario(usuario:usuario_create):
     }
 
 @router.put("/{id}")
-async def actualizar_usuario(id: int, usuario_actualizado: dict):
+async def actualizar_usuario(id: int, usuario_actualizado: dict, usuario_auth: dict = Depends(verificar_Peticion)):
     for index, usr in enumerate(usuarios):
         if usr["id"] == id:
             usuarios[index].update(usuario_actualizado)
             return {
                 "mensaje": "Usuario actualizado correctamente",
+                "actualizado_por": usuario_auth["username"],
                 "usuario": usuarios[index]
             }
     raise HTTPException(
