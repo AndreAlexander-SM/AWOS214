@@ -30,7 +30,7 @@ async def crear_usuario(usuarioP:usuario_create, db:Session= Depends(get_db)):
     nuevoUsuario= usuarioDB(nombre= usuarioP.nombre, edad= usuarioP.edad)
     db.add(nuevoUsuario)
     db.commit()
-    db.refres(nuevoUsuario)
+    db.refresh(nuevoUsuario)
 
 
     return{
